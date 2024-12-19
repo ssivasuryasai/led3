@@ -21,7 +21,7 @@
    //-------------------------------------------------------
    
    var(in_fpga, 1)   /// 1 to include the demo board. (Note: Logic will be under /fpga_pins/fpga.)
-   var(debounce_inputs, 0)         /// 1: Provide synchronization and debouncing on all input signals.
+   var(debounce_inputs, 1)         /// 1: Provide synchronization and debouncing on all input signals.
                                    /// 0: Don't provide synchronization and debouncing.
                                    /// m5_if_defined_as(MAKERCHIP, 1, 0, 1): Debounce unless in Makerchip.
    
@@ -40,13 +40,31 @@
 
 \TLV my_design()
    $reset = *ui_in[0] ;
+   $speed4[31:0] = 32'd500000;
+   $speed3[31:0] = 32'd1000000;
+   $speed2[31:0] = 32'd5000000;
+   $speed1[31:0] = 32'd10000000;
    
-   $count[31:0] = (>>1$reset || >>1$count == 32'd1000000 ) ? 32'b0 : >>1$count +1 ;
-   $clk_pulse = >>1$reset ? 1'b0: $count == 32'd1000000 ? ~>>1$clk_pulse : >>1$clk_pulse ;
+   
+   $count_speed4[31:0] = (>>1$reset || >>1$count_speed4 == $speed4 ) ? 32'b0 : >>1$count_speed4 +1 ;
+   $clk_pulse4 = >>1$reset ? 1'b0: $count_speed4 == $speed4 ? ~>>1$clk_pulse4 : >>1$clk_pulse4 ;
+   
+   $count_speed3[31:0] = (>>1$reset || >>1$count_speed3 == $speed3 ) ? 32'b0 : >>1$count_speed3 +1 ;
+   $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == $speed3 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
+   
+   $count_speed2[31:0] = (>>1$reset || >>1$count_speed2 == $speed2 ) ? 32'b0 : >>1$count_speed2 +1 ;
+   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == $speed2 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
+   
+   $count_speed1[31:0] = (>>1$reset || >>1$count_speed1 == $speed1 ) ? 32'b0 : >>1$count_speed1 +1 ;
+   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == $speed1 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
+   
+   
+   
+   
    
    $led_output[7:0] = >>1$reset ? 8'b1: 
-                (!>>1$clk_pulse && $clk_pulse) ? 
-                  $forward ?
+                (!>>1$clk_pulse4 && $clk_pulse4) ? 
+                  >>1$forward ?
                      >>1$led_output[7:0] << 1:  // Shift left 
                      //default 
                      >>1$led_output[7:0] >> 1 // Shift right
@@ -54,13 +72,15 @@
                   
    $forward = $reset ? 1'b1 :  // forward is right to left when == 1'b1
               
-               ($right_edge  && >>1$led_output < 8'd8)
+               ($right_edge  && $led_output <= 8'd8)
                   ? 1'b1
-               :  ($left_edge  && >>1$led_output > 8'd8)
+               :  ($left_edge  && $led_output > 8'd8)
                   ? 1'b0
                   //default
                   : >>1$forward;
-               
+   
+
+   
                   
    $left_btn = *ui_in[3];
    $left_edge = (!>>1$left_btn && $left_btn) ;
