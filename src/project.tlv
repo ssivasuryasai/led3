@@ -63,7 +63,7 @@
    
    
    $led_output[7:0] = >>1$reset ? 8'b1: 
-                (!>>1$clk_pulse4 && $clk_pulse4) ? 
+                (!>>2$speed_choose && >>1$speed_choose) ? 
                   >>1$forward ?
                      >>1$led_output[7:0] << 1:  // Shift left 
                      //default 
@@ -78,8 +78,18 @@
                   ? 1'b0
                   //default
                   : >>1$forward;
-   
-
+   $speed_choose = $reset ? 1'b0 :  
+              
+               ($right_edge || $left_edge)  && ($led_output == 8'd80 || $led_output == 8'd01)
+                  ? $clk_pulse4
+               :  ($right_edge || $left_edge)  && ($led_output == 8'd40 || $led_output == 8'd02)
+                  ? $clk_pulse3
+               :  ($right_edge || $left_edge)  && ($led_output == 8'd20 || $led_output == 8'd04)
+                  ? $clk_pulse2
+               :  ($right_edge || $left_edge)  && ($led_output == 8'd10 || $led_output == 8'd08)
+                  ? $clk_pulse1
+                  //default
+                  : >>1$speed_choose;
    
                   
    $left_btn = *ui_in[3];
