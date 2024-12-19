@@ -54,9 +54,9 @@
                   
    $forward = $reset ? 1'b1 :  // forward is right to left when == 1'b1
               
-               ($right_edge  && $led_output < 8'd8)
+               ($right_edge  && >>1$led_output < 8'd8)
                   ? 1'b1
-               :  ($left_edge  && $led_output > 8'd8)
+               :  ($left_edge  && >>1$led_output > 8'd8)
                   ? 1'b0
                   //default
                   : >>1$forward;
@@ -112,7 +112,7 @@ module top(input logic clk, input logic reset, input logic [31:0] cyc_cnt, outpu
       #1  // Drive inputs on the B-phase.
          ui_in = 8'h0;
       #10 // Step 5 cycles, past reset.
-         ui_in = 8'hFF;
+         ui_in = 8'hFF; 
       // ...etc.
    end
    */
