@@ -78,11 +78,13 @@
    
    
    $led_output[7:0] = (>>1$win == 2'b01 )
-                        ? 8'b00001111
-                           
+                        ? (>>1$clk_pulse2) 
+                           ?8'b00001111
+                           :8'b0
                       :>>1$win == 2'b10
-                        ?8'b11110000
-                           
+                        ? (>>1$clk_pulse2) 
+                           ?8'b11110000
+                           : 8'b0
    
                      :(>>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10)  )
                             ? 8'b00001000 :
@@ -106,14 +108,14 @@
    $state[1:0] = >>1$reset || $win != 2'b0 ? 2'b01 
                  : (>>1$led_output == 8'b0 && >>1$state == 2'b01 ) ? //Score display
                        2'b10
-                 : (>>1$state == 2'b10 && >>1$wait_counter == 26'd50000000)  ? // Normal gameplay
+                 : (>>1$state == 2'b10 && >>1$wait_counter == 24'hFFFFFF)  ? // Normal gameplay
                        2'b01
                        
                        : >>1$state[1:0] ;
    
-   $wait_counter[25:0] = >>1$reset || >>1$state == 2'b01 ? 26'b0 :
-                      (>>1$state == 2'b10 && >>1$wait_counter < 26'd50000000) ? >>1$wait_counter + 1 :
-                      26'b0;
+   $wait_counter[23:0] = >>1$reset || >>1$state == 2'b01 ? 24'hFFFFFF :
+                      (>>1$state == 2'b10 && >>1$wait_counter < 24'hFFFFFF) ? >>1$wait_counter + 1 :
+                      24'b0;
 
                        
    $score[7:0] = >>1$reset ? 8'd0 : 
