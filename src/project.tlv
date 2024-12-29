@@ -39,57 +39,89 @@
 
 
 \TLV my_design()
-   $reset = *ui_in[0] ;
-   $speed4[31:0] = 32'd500000;
-   $speed3[31:0] = 32'd1000000;
-   $speed2[31:0] = 32'd5000000;
-   $speed1[31:0] = 32'd10000000;
+    
+     
+   $reset = *ui_in[0];
    
    
-   $count_speed4[31:0] = (>>1$reset || >>1$count_speed4 == $speed4 ) ? 32'b0 : >>1$count_speed4 +1 ;
-   $clk_pulse4 = >>1$reset ? 1'b0: $count_speed4 == $speed4 ? ~>>1$clk_pulse4 : >>1$clk_pulse4 ;
+   $count_speed4[18:0] = (>>1$reset || >>1$count_speed4 == 19'd500000 ) ? 19'b0 : >>1$count_speed4 +1 ;
+   $clk_pulse4 = >>1$reset ? 1'b0: $count_speed4 == 19'd500000 ? ~>>1$clk_pulse4 : >>1$clk_pulse4 ;
    
-   $count_speed3[31:0] = (>>1$reset || >>1$count_speed3 == $speed3 ) ? 32'b0 : >>1$count_speed3 +1 ;
-   $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == $speed3 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
+   $count_speed3[19:0] = (>>1$reset || >>1$count_speed3 == 20'd900000 ) ? 20'b0 : >>1$count_speed3 +1 ;
+   $clk_pulse3 = >>1$reset ? 1'b0: $count_speed3 == 20'd900000 ? ~>>1$clk_pulse3 : >>1$clk_pulse3 ;
    
-   $count_speed2[31:0] = (>>1$reset || >>1$count_speed2 == $speed2 ) ? 32'b0 : >>1$count_speed2 +1 ;
-   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == $speed2 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
+   $count_speed2[20:0] = (>>1$reset || >>1$count_speed2 == 21'd1700000 ) ? 21'b0 : >>1$count_speed2 +1 ;
+   $clk_pulse2 = >>1$reset ? 1'b0: $count_speed2 == 21'd1700000 ? ~>>1$clk_pulse2 : >>1$clk_pulse2 ;
    
-   $count_speed1[31:0] = (>>1$reset || >>1$count_speed1 == $speed1 ) ? 32'b0 : >>1$count_speed1 +1 ;
-   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == $speed1 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
-   
-   
+   $count_speed1[23:0] = (>>1$reset || >>1$count_speed1 == 24'd2000000 ) ? 24'b0 : >>1$count_speed1 +1 ;
+   $clk_pulse1 = >>1$reset ? 1'b0: $count_speed1 == 24'd2000000 ? ~>>1$clk_pulse1 : >>1$clk_pulse1 ;
    
    
+             
+   $speed_level[1:0] = >>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10) ? 2'b0 :  
+               ($right_edge && $led_output == 8'h01) || ($left_edge  && $led_output == 8'h80)
+                  ? 2'd3
+               :  ($right_edge && $led_output == 8'h02) || ($left_edge  && $led_output == 8'h40)
+                  ? 2'd2
+               :  ($right_edge && $led_output == 8'h04) || ($left_edge  && $led_output == 8'h20)
+                  ? 2'd1
+               :  ($right_edge && $led_output == 8'h08) || ($left_edge  && $led_output == 8'h10)
+                  ? 2'd0
+                  //default
+                  : >>1$speed_level;
    
-   $led_output[7:0] = >>1$reset ? 8'b1: 
-                (!>>2$speed_choose && >>1$speed_choose) ? 
-                  >>1$forward ?
-                     >>1$led_output[7:0] << 1:  // Shift left 
-                     //default 
-                     >>1$led_output[7:0] >> 1 // Shift right
-                  :>>1$led_output ;
-                  
-   $forward = $reset ? 1'b1 :  // forward is right to left when == 1'b1
-              
+   
+   $clk_pulse = ($speed_level == 2'b11) ? $clk_pulse4 :
+                ($speed_level == 2'b10) ? $clk_pulse3 :
+                ($speed_level == 2'b01) ? $clk_pulse2 :
+                $clk_pulse1; // Default to slowest speed
+   
+   
+   $led_output[7:0] = (>>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10)  )
+                            ? 8'b00001000 :
+                   
+                      >>2$state == 2'b10 ? 
+                            >>3$score[7:0]
+                      :(!>>2$clk_pulse && >>1$clk_pulse) ?
+                          >>1$forward ? >>1$led_output[7:0] << 1 : >>1$led_output[7:0] >> 1 :
+                          >>1$led_output ;
+   
+   
+   $forward = >>1$reset || (>>2$state == 2'b01 && >>3$state == 2'b10) ? 1'b1 :  // forward is right to left when == 1'b1
                ($right_edge  && $led_output <= 8'd8)
                   ? 1'b1
                :  ($left_edge  && $led_output > 8'd8)
                   ? 1'b0
                   //default
                   : >>1$forward;
-   $speed_choose = $reset ? 1'b0 :  
-              
-               ($right_edge || $left_edge)  && ($led_output == 8'd80 || $led_output == 8'd01)
-                  ? $clk_pulse4
-               :  ($right_edge || $left_edge)  && ($led_output == 8'd40 || $led_output == 8'd02)
-                  ? $clk_pulse3
-               :  ($right_edge || $left_edge)  && ($led_output == 8'd20 || $led_output == 8'd04)
-                  ? $clk_pulse2
-               :  ($right_edge || $left_edge)  && ($led_output == 8'd10 || $led_output == 8'd08)
-                  ? $clk_pulse1
-                  //default
-                  : >>1$speed_choose;
+   
+   
+   $state[1:0] = >>1$reset ? 2'b01 
+                 : (>>1$led_output == 8'b0 && >>1$state == 2'b10) ? //Score display
+                       2'b10
+                 : (>>1$state == 2'b10 && >>1$wait_counter == 24'd10000000)  ? // Normal gameplay
+                       2'b01
+                       
+                       : >>1$state[1:0] ;
+   
+   $wait_counter[23:0] = >>1$reset || >>1$state == 2'b01 ? 24'b0 :
+                      (>>1$state == 2'b10 && >>1$wait_counter < 24'd10000000) ? >>1$wait_counter + 1 :
+                      24'b0;
+
+                       
+   $score[7:0] = >>1$reset ? 8'd0 : 
+             (>>2$led_output == 8'h80  && >>1$led_output == 8'b0) 
+                ? >>1$score == 0 
+                   ? 8'b00010000 // Start score setting
+                   : >>1$score << 1 // Increase score
+             : (>>2$led_output == 8'h01  && >>1$led_output == 8'b0)
+                ? >>1$score == 0 
+                   ? 8'b00001000 // Start score setting
+                   : >>1$score >> 1 // Increase score
+                   
+                   : >>1$score ;
+   
+   
    
                   
    $left_btn = *ui_in[3];
@@ -100,7 +132,9 @@
    
    
    
-   *uo_out = $led_output ;
+   *uo_out = $led_output ; 
+   
+   
    // Connect Tiny Tapeout outputs. Note that uio_ outputs are not available in the Tiny-Tapeout-3-based FPGA boards.
    //*uo_out = 8'b0;
    m5_if_neq(m5_target, FPGA, ['*uio_out = 8'b0;'])
