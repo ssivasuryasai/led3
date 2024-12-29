@@ -97,7 +97,7 @@
    
    
    $state[1:0] = >>1$reset ? 2'b01 
-                 : (>>1$led_output == 8'b0 && >>1$state == 2'b10) ? //Score display
+                 : (>>1$led_output == 8'b0 && >>1$state == 2'b01) ? //Score display
                        2'b10
                  : (>>1$state == 2'b10 && >>1$wait_counter == 24'd10000000)  ? // Normal gameplay
                        2'b01
