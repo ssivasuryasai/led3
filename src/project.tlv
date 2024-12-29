@@ -65,10 +65,11 @@
                   ? 2'd2
                :  ($right_edge && $led_output == 8'h04) || ($left_edge  && $led_output == 8'h20)
                   ? 2'd1
+               :  ($right_edge && $led_output == 8'h08) || ($left_edge  && $led_output == 8'h10)
+                  ? 2'd0
                   //default
-                  : 2'd0 ;
-                  
-                  
+                  : >>1$speed_level;
+   
    
    $clk_pulse = ($speed_level == 2'b11) ? $clk_pulse4 :
                 ($speed_level == 2'b10) ? $clk_pulse3 :
@@ -112,9 +113,9 @@
                        
                        : >>1$state[1:0] ;
    
-   $wait_counter[24:0] = >>1$reset || >>1$state == 2'b01 ? 25'd30000000 :
+   $wait_counter[24:0] = >>1$reset || >>1$state == 2'b01 ? 25'b0 :
                       (>>1$state == 2'b10 && >>1$wait_counter < 25'd30000000) ? >>1$wait_counter + 1 :
-                      25'b0;
+                      25'd0;
 
                        
    $score[7:0] = >>1$reset ? 8'd0 : 
