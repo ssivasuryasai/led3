@@ -105,8 +105,8 @@
                   : >>1$forward;
    
    
-   $state[1:0] = >>1$reset ? 2'b01 
-                 : (>>1$led_output == 8'b0 && >>1$state == 2'b01) ? //Score display
+   $state[1:0] = >>1$reset || $win != 2'b0 ? 2'b01 
+                 : (>>1$led_output == 8'b0 && >>1$state == 2'b01 ) ? //Score display
                        2'b10
                  : (>>1$state == 2'b10 && >>1$wait_counter == 26'd50000000)  ? // Normal gameplay
                        2'b01
